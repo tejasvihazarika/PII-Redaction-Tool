@@ -374,7 +374,8 @@ export function fallbackScanPII(text) {
     let cm;
     while ((cm = re.exec(text)) !== null) {
       const orig = cm[1].trim();
-      const start = cm.index + cm[0].indexOf(cm[1]);
+      const relativeOffset = cm[0].lastIndexOf(cm[1]);
+      const start = cm.index + (relativeOffset !== -1 ? relativeOffset : 0);
       const end = start + cm[1].length;
       if (!isFalsePositive(orig)) tryAdd('Full Name', orig, start, end, 0.95);
     }
@@ -388,7 +389,8 @@ export function fallbackScanPII(text) {
     "student", "parent", "signature", "place", "date", "verified", "headquarters",
     "ticket", "issue", "summary", "contact", "details", "credit", "card", "social",
     "security", "number", "email", "address", "phone", "date", "birth", "redacted",
-    "prospectus", "herring", "draft", "red", "general", "information", "risk", "factors"
+    "prospectus", "herring", "draft", "red", "general", "information", "risk", "factors",
+    "profile", "sheet", "resume", "sap", "id", "registration", "copy", "received"
   ]);
   capPairRe.lastIndex = 0;
   let cpm;

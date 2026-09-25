@@ -163,7 +163,9 @@ FALSE_POSITIVE_BLACKLIST = {
     "academic year", "school head", "personality enhancement program", "service agreement",
     "student signature", "parent signature", "student's signature", "parent's signature",
     "opt-in", "opting-in", "opting-in of campus placements", "campus placements",
-    "office of", "career services, upes, dehradun", "upes, dehradun", "upes"
+    "office of", "career services, upes, dehradun", "upes, dehradun", "upes",
+    "profile sheet", "profile sheet & resume", "profile", "sheet", "resume",
+    "sap id", "sap", "id", "batch", "copy: received", "copy received", "copy"
 }
 
 GENERIC_DOCUMENT_KEYWORDS = {
@@ -439,7 +441,8 @@ def detect_pii(text: str) -> List[Dict[str, Any]]:
         "student", "parent", "signature", "place", "date", "verified", "headquarters",
         "ticket", "issue", "summary", "contact", "details", "credit", "card", "social",
         "security", "number", "email", "address", "phone", "date", "birth", "redacted",
-        "prospectus", "herring", "draft", "red", "general", "information", "risk", "factors"
+        "prospectus", "herring", "draft", "red", "general", "information", "risk", "factors",
+        "profile", "sheet", "resume", "sap", "id", "registration", "copy", "received"
     }
     for match in re.finditer(cap_pair_pattern, text):
         orig = match.group(1).strip()
