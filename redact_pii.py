@@ -1,7 +1,9 @@
+
+Pii redactor · PY
 """
 PII Detection & Redaction Tool
 ===============================
-
+ 
 Approach
 --------
 Layered detection, in order of confidence:
@@ -15,13 +17,13 @@ Layered detection, in order of confidence:
   4. Address detection: Indian pincode pattern + nearby place-name cues.
   5. spaCy NER (PERSON / ORG / GPE / LOC / FAC) as a catch-all if spaCy +
      en_core_web_sm are installed; purely optional, degrades gracefully.
-
+ 
 Deliberately NOT included: any hardcoded list of the real names, companies,
 or addresses that appear in a specific source document. A lookup table of
 "here are the actual PII strings in this file" is not PII detection - it's
 an answer key, and it will not generalize to any other input. Everything
 below is a *pattern* or *heuristic*, not a memorized fact about one document.
-
+ 
 Extending to a new PII type
 ----------------------------
 - Structured/regex-shaped PII (e.g. passport numbers, bank account numbers):
@@ -34,7 +36,7 @@ Extending to a new PII type
   FALSE_POSITIVE_BLACKLIST / GENERIC_DOCUMENT_KEYWORDS and a test case in
   the evaluation harness (see eval_report.py).
 """
-
+ 
 import re
 import os
 import sys
@@ -43,7 +45,7 @@ import random
 import argparse
 import docx
 from typing import Dict, List, Tuple, Any
-
+ 
 try:
     import spacy
     try:
@@ -52,7 +54,7 @@ try:
         nlp = None
 except ImportError:
     nlp = None
-
+ 
 # ─────────────────────────────────────────────
 # FAKE REPLACEMENT POOLS (used for --mode fake)
 # ─────────────────────────────────────────────
@@ -84,7 +86,7 @@ FAKE_SSNS = ["000-00-0000", "999-88-7776", "123-45-6789", "555-44-3321"]
 FAKE_CREDIT_CARDS = ["4111 2222 3333 4444", "5555 4444 3333 2222", "3782 8224 6310 005"]
 FAKE_DOBS = ["1985-04-12", "1992-11-05", "1978-09-23", "1990-01-15"]
 FAKE_IPS = ["192.168.1.105", "10.0.4.52", "172.16.254.1", "203.0.113.42"]
-
+ 
 # ─────────────────────────────────────────────
 # GENERIC FALSE-POSITIVE GUARDS
 # (document jargon, not any specific PII value)
@@ -111,8 +113,11 @@ FALSE_POSITIVE_BLACKLIST = {
     "campus placement", "placement process", "academic year", "personality enhancement program",
     "service agreement", "student signature", "parent signature", "opting-in of campus placements",
     "profile sheet", "sap id", "copy received",
+    # Public regulators / stock exchanges - real entities, but not
+    # confidential/private PII, so treated as non-PII by policy (see README).
+    "bse limited", "nse limited", "bse", "nse", "rbi", "sebi", "irdai",
 }
-
+ 
 GENERIC_DOCUMENT_KEYWORDS = {
     "act", "officer", "issue", "shares", "board", "offer", "requirements", "regulatory",
     "disclosures", "investors", "bidders", "prospectus", "listing", "section",
@@ -125,7 +130,7 @@ GENERIC_DOCUMENT_KEYWORDS = {
     "career", "academic", "program", "signature", "opting", "process", "batch", "session",
     "agreement",
 }
-
+ 
 CORPORATE_SUFFIXES = {
     "inc", "llc", "corp", "ltd", "pvt ltd", "private limited", "public limited", "corporation",
     "solutions", "technologies", "systems", "global", "holdings", "group", "bank",
@@ -134,7 +139,7 @@ CORPORATE_SUFFIXES = {
     "switchgear", "automation", "products", "management limited", "ratings",
     "securities", "industries",
 }
-
+ 
 # Small, generic name-part wordlists used only as a *tiebreaker* to raise
 # confidence on ambiguous capitalized pairs (e.g. distinguishing "Rohan Dey"
 # from "Career Services"). Not a record of any real person in any document.
@@ -149,49 +154,49 @@ COMMON_INDIAN_FIRST_NAMES = {
     "dinesh", "ajay", "indu", "prakash", "sachin", "pravin", "siddharth", "tushar", "varun",
     "priya", "pooja", "neha", "amit", "rahul", "aditya", "ananya", "divya", "sneha",
 }
-
+ 
 INDIAN_ADDRESS_KEYWORDS = [
     "birdewadi", "chakan", "baner", "pune", "bandra east", "prabhadevi", "erandawane",
     "pashan", "akurdi", "koregaon park", "govindpura", "deccan gymkhana", "shivajinagar",
     "churchgate", "prabhat road", "bkc", "bandra kurla", "nariman point", "andheri",
     "dadar", "worli", "mahalaxmi", "kurla", "thane", "navi mumbai", "mumbai", "maharashtra",
 ]
-
-
+ 
+ 
 def is_false_positive(val: str) -> bool:
     if not val or not val.strip():
         return True
     clean = val.strip().lower()
-
+ 
     if clean in FALSE_POSITIVE_BLACKLIST:
         return True
     for term in FALSE_POSITIVE_BLACKLIST:
         if clean == term or clean.startswith(term) or clean.endswith(term):
             return True
-
+ 
     words = re.findall(r"\b[a-z]+\b", clean)
     has_person_prefix = any(clean.startswith(p) for p in ["mr.", "ms.", "mrs.", "dr."])
     has_indian_name = any(w in COMMON_INDIAN_SURNAMES or w in COMMON_INDIAN_FIRST_NAMES for w in words)
     has_corp_suffix = any(s in clean for s in CORPORATE_SUFFIXES)
-
+ 
     if has_person_prefix or has_indian_name:
         return False
-
+ 
     if has_corp_suffix:
         if any(w in ["career", "placement", "academic", "student", "parent", "office", "school"] for w in words):
             return True
         return False
-
+ 
     if re.match(r"^(the|a|an|other)\s+", clean):
         return True
-
+ 
     has_generic = any(w in GENERIC_DOCUMENT_KEYWORDS for w in words)
     if has_generic and len(words) <= 3:
         return True
-
+ 
     return False
-
-
+ 
+ 
 def get_fake(category: str, seed_str: str = "") -> str:
     idx = abs(hash(seed_str)) if seed_str else random.randint(0, 100)
     cat = category.upper().replace(" ", "_")
@@ -208,8 +213,8 @@ def get_fake(category: str, seed_str: str = "") -> str:
     }
     pool = pools.get(cat)
     return pool[idx % len(pool)] if pool else "[REDACTED]"
-
-
+ 
+ 
 REGEX_PATTERNS = {
     "Email": r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b",
     "Phone": r"\b[6-9]\d{9}\b|\b(?:\+?\s*91\s*[-.\s]?|0)[\s-]?\(?\d{2,5}\)?[\s.-]?\d{3,5}[\s.-]?\d{3,5}\b|\b022[-]\d{8}\b|\b\+91[-]\d{2,4}-\d{5,8}\b",
@@ -218,9 +223,15 @@ REGEX_PATTERNS = {
     "IP Address": r"\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b",
     "DOB": r"\b\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}\b|\b(?:19|20)\d{2}[-/.]\d{1,2}[-/.]\d{1,2}\b|\b\d{1,2}[-/.]\d{1,2}[-/.](?:19|20)\d{2}\b",
 }
-
+ 
 ORG_REGEX_PATTERN = (
-    r"\b([A-Za-z0-9&./-]+(?:\s+[A-Za-z0-9&./-]+){0,7}\s+"
+    # Every "name" token must itself start with a capital letter (a proper
+    # noun), and there must be at least one such token before the suffix.
+    # This is what stops the pattern from swallowing ordinary sentences that
+    # merely contain a suffix word ("...approved by the Securities...") -
+    # lowercase filler words like "the"/"by"/"have" break the capitalized
+    # chain, so the match can't reach backward across them.
+    r"\b((?:[A-Z][A-Za-z0-9&.\'-]*\s+){1,6}"
     r"(?:Private Limited|Pvt\.?\s*Ltd\.?|Public Limited|Limited|Ltd\.?|"
     r"LLP|Co\.?\s*LLP|Family Trust|Trust|Corporation|"
     r"Bank|Fund Limited|Fund|Associates|Inc\.?|LLC|"
@@ -228,18 +239,18 @@ ORG_REGEX_PATTERN = (
     r"Logistics|Distriparks|Solutions|Management|"
     r"Ratings|Automation|Products|Wires|Switchgear))\b"
 )
-
+ 
 ADDRESS_REGEX_PATTERN = (
     r"(?:[^.\n]{0,60}?"
     r"(?:village\s+\w+|taluka[-\s]\w+|" + "|".join(INDIAN_ADDRESS_KEYWORDS) + r")"
     r"[^.\n]{0,80}?(?:[\u2013-]\s*)?\d{3}\s*\d{3})"
 )
-
+ 
 CONTEXT_NAME_PATTERNS = [
     r"(?:Name|Student[\u2019']?s?\s*Name|Parent[\u2019']?s?\s*Name|Reporter|Customer|User|D/o|S/o|W/o|Mr\.|Ms\.|Mrs\.|Dr\.)\s*[:,\s]\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})",
     r"\bI,\s+([A-Z][a-z]+\s+[A-Z][a-z]+)\b",
 ]
-
+ 
 CAP_PAIR_EXCLUDED_WORDS = {
     "the", "office", "career", "services", "placement", "campus", "batch", "academic",
     "year", "school", "head", "subject", "opting", "process", "service", "agreement",
@@ -248,19 +259,30 @@ CAP_PAIR_EXCLUDED_WORDS = {
     "security", "number", "email", "address", "phone", "birth", "redacted",
     "prospectus", "herring", "draft", "red", "general", "information", "risk", "factors",
     "profile", "sheet", "resume", "sap", "id", "registration", "copy", "received",
+    # Financial / legal document jargon that shows up as capitalized section
+    # headers or defined terms - these are the terms that were getting
+    # misflagged as people's names in practice.
+    "our", "company", "lead", "managers", "book", "building", "promoter", "promoters",
+    "selling", "shareholders", "shareholder", "qualified", "institutional", "retail",
+    "individual", "bidders", "bidder", "running", "anchor", "investor", "investors",
+    "non", "qib", "rii", "nii", "offer", "issue", "price", "band", "equity", "shares",
+    "related", "securities", "exchange", "board", "listed", "listing", "bse", "nse",
+    "approved", "recommended", "not", "have", "been", "or", "by", "for", "with", "from",
+    "risks", "investments", "capital", "market", "regulatory", "authority", "act",
+    "rules", "regulations", "chapter", "annexure", "form", "clause", "section",
 }
-
-
+ 
+ 
 def detect_pii(text: str) -> List[Dict[str, Any]]:
     if not text or not text.strip():
         return []
-
+ 
     findings: List[Dict[str, Any]] = []
     seen_spans: List[Tuple[int, int]] = []
-
+ 
     def is_overlapping(start: int, end: int) -> bool:
         return any(not (end <= s or start >= e) for s, e in seen_spans)
-
+ 
     def add_finding(ftype: str, orig: str, start: int, end: int, conf: float):
         if is_overlapping(start, end):
             return
@@ -277,7 +299,7 @@ def detect_pii(text: str) -> List[Dict[str, Any]]:
             "replacement_tag": f"[{tag}]",
             "status": "accepted",
         })
-
+ 
     # 1. Structured regex PII
     for pii_type, pattern in REGEX_PATTERNS.items():
         for match in re.finditer(pattern, text, re.IGNORECASE):
@@ -290,21 +312,24 @@ def detect_pii(text: str) -> List[Dict[str, Any]]:
                 if len(digits) < 7 or len(digits) > 15:
                     continue
             add_finding(pii_type, orig, start, end, 0.97)
-
-    # 2. Corporate entities (suffix-driven, generic)
-    for match in re.finditer(ORG_REGEX_PATTERN, text, re.IGNORECASE):
+ 
+    # 2. Corporate entities (suffix-driven, generic).
+    # NOTE: deliberately case-SENSITIVE - the capitalization requirement in
+    # ORG_REGEX_PATTERN is what prevents it from matching ordinary lowercase
+    # sentences; re.IGNORECASE here would silently defeat that guard.
+    for match in re.finditer(ORG_REGEX_PATTERN, text):
         orig = match.group(1).strip()
         start, end = match.start(1), match.end(1)
         if not is_false_positive(orig):
             add_finding("Company", orig, start, end, 0.95)
-
+ 
     # 3. Addresses (pincode + place-name cue)
     for match in re.finditer(ADDRESS_REGEX_PATTERN, text, re.IGNORECASE):
         orig = match.group(0).strip()
         start, end = match.start(), match.end()
         if len(orig) >= 4 and not is_false_positive(orig):
             add_finding("Address", orig, start, end, 0.9)
-
+ 
     # 4. Contextual name cues ("Name:", "I, <Name>,", honorifics)
     for cp in CONTEXT_NAME_PATTERNS:
         for match in re.finditer(cp, text):
@@ -312,7 +337,7 @@ def detect_pii(text: str) -> List[Dict[str, Any]]:
             start, end = match.start(1), match.end(1)
             if not is_false_positive(orig):
                 add_finding("Full Name", orig, start, end, 0.93)
-
+ 
     # 5. Generic capitalized-pair name matcher (heuristic, wordlist tiebreak)
     for match in re.finditer(r"\b([A-Z][a-z]{2,15}\s+[A-Z][a-z]{2,15})\b", text):
         orig = match.group(1).strip()
@@ -323,7 +348,7 @@ def detect_pii(text: str) -> List[Dict[str, Any]]:
         if is_false_positive(orig):
             continue
         add_finding("Full Name", orig, start, end, 0.8)
-
+ 
     # 6. spaCy NER catch-all (optional)
     if nlp:
         doc = nlp(text)
@@ -334,11 +359,11 @@ def detect_pii(text: str) -> List[Dict[str, Any]]:
                 orig = ent.text.strip()
                 if len(orig) > 3 and not is_false_positive(orig):
                     add_finding(ftype, orig, ent.start_char, ent.end_char, 0.75)
-
+ 
     findings.sort(key=lambda x: x["start"])
     return findings
-
-
+ 
+ 
 def apply_redaction(text: str, findings: List[Dict[str, Any]], mode: str = "fake") -> str:
     if not text:
         return ""
@@ -354,16 +379,16 @@ def apply_redaction(text: str, findings: List[Dict[str, Any]], mode: str = "fake
             )
             result = result[:s] + rep + result[e:]
     return result
-
-
+ 
+ 
 class PIIRedactor:
     def __init__(self, mode: str = "fake"):
         self.mode = mode
-
+ 
     def redact_text(self, text: str) -> Tuple[str, List[Dict[str, Any]]]:
         findings = detect_pii(text)
         return apply_redaction(text, findings, self.mode), findings
-
+ 
     def redact_docx(self, input_path: str, output_path: str):
         all_findings = []
         if input_path.endswith(".docx"):
@@ -393,8 +418,8 @@ class PIIRedactor:
         print(f"[+] Saved to: {output_path}")
         print(f"[+] {len(all_findings)} PII items redacted")
         return all_findings
-
-
+ 
+ 
 def main():
     parser = argparse.ArgumentParser(description="PII Detection & Redaction Tool")
     parser.add_argument("--input", "-i", required=True)
@@ -411,7 +436,8 @@ def main():
         with open(args.output, "w", encoding="utf-8") as f:
             f.write(out)
         print(f"[+] {len(findings)} PII items redacted -> {args.output}")
-
-
+ 
+ 
 if __name__ == "__main__":
     main()
+ 
