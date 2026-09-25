@@ -85,8 +85,7 @@ KNOWN_PII_ORGS = {
     "pandit llp", "nuvama wealth management limited", "nuvamawealth management limited",
     "icici securities limited", "mufg intime india private limited",
     "formerly link intime india private limited", "bhandary metal extrusion private limited",
-    "ksh international private limited", "and waterloo industrial park vi private limited",
-    "of ksh international limited", "waterloo motors private limited",
+    "ksh international private limited", "waterloo motors private limited",
     "ksh project management services private limited", "ksh infra park vi private limited",
     "ksh distriparks private limited", "ksh integrated logistics private limited",
     "waterloo industrial park i private limited", "waterloo industrial park ii private limited",
@@ -95,18 +94,13 @@ KNOWN_PII_ORGS = {
     "waterloo industrial park ix private limited", "waterloo industrial park ix b private limited",
     "ksh infra park iv private limited", "hdfc bank limited", "icici securities",
     "care ratings limited", "icici bank limited", "national payments corporation",
-    "united states securities", "export promotion capital", "precision wires india limited",
-    "solar energy corporation", "net working capital", "everestfamily trust",
+    "precision wires india limited", "solar energy corporation", "everestfamily trust",
     "makalufamily trust", "malabar india fund limited", "bharat bijlee limited",
     "industrial solutions limited", "switchgear limited", "georgia transformer corporation",
     "nidec industrial automation india private limited", "virginia transformer corporation",
     "cindus corporation", "elantas beck india limited", "hindalco industries limited",
     "polycom associates", "savli copper products private limited", "vedanta limited",
-    "investment private limited", "co llp", "networking capital",
-    "waterloo industrial park ix a private limited", "cloud services",
-    "company ksh international limited", "offer escrow collection bank hdfc bank",
-    "co. llp", "export-import bank", "indusind bank limited", "icici bank",
-    "bajaj finance limited", "icici securities limited"
+    "indusind bank limited", "icici bank", "bajaj finance limited"
 }
 
 KNOWN_PII_PERSONS = {
@@ -136,25 +130,21 @@ KNOWN_PII_ADDRESSES_KEYWORDS = [
 # STRICT FALSE POSITIVE BLACKLIST
 # ─────────────────────────────────────────────
 FALSE_POSITIVE_BLACKLIST = {
-    "companies act", "compliance officer", "fresh issue", "equity shares", "exchange board",
-    "the offer", "disclosure requirements", "other regulatory", "statutory disclosures",
-    "institutional investors", "qualified institutional buyers", "retail individual bidders",
-    "non institutional bidders", "anchor investor", "draft red herring prospectus",
-    "red herring prospectus", "herring prospectus", "draft red", "prospectus", "issue size",
-    "face value", "net offer", "offer for sale", "promoter group", "key managerial",
-    "board of directors", "statutory auditor", "chartered accountant", "company secretary",
-    "managing director", "whole time director", "independent director",
-    "issue structure", "contact details", "alternative contact",
-    "secondary address", "primary address", "mailing address",
-    "issue summary", "ticket log", "agent notes", "customer details", "system error",
-    "term description", "director identification", "identification number", "the department",
-    "price band", "mutual funds", "pension funds", "life insurance",
-    "allocation price", "application supported", "blocked amount",
-    "account access", "payment processing", "contact person", "contact information",
-    "redacted document", "ticket id", "date", "subject", "sebi", "sec",
-    "table of contents", "summary of offer", "general information", "risk factors",
-    "hegde promoter", "corporate identification",
-    # Institutional document headers
+    # Financial Prospectus Terms (From User Screenshots & Common False Positives)
+    "qualified institutional", "qualified institutional buyers", "qualified institutional buyer",
+    "retail individual", "retail individual bidders", "retail individual bidder",
+    "promoter selling", "promoter selling shareholder", "cap price", "floor price",
+    "book running", "book running lead managers", "lead managers", "book building",
+    "our company", "the company", "issuer company", "general risks", "investments in equity",
+    "equity and equity-related securities", "of the securities", "securities", "the securities",
+    "have not been recommended or approved by the securities", "recommended or approved",
+    "proposed to be listed", "are proposed to be listed", "equity shares", "fresh issue",
+    "offer for sale", "issue size", "face value", "net offer", "promoter group",
+    "key managerial", "board of directors", "statutory auditor", "chartered accountant",
+    "company secretary", "managing director", "whole time director", "independent director",
+    "draft red herring prospectus", "red herring prospectus", "herring prospectus",
+    "draft red", "prospectus", "issue structure", "contact details",
+    # Academic / Institutional / Ticket Headers
     "the office of career services", "office of career services", "career services",
     "career services officer", "head – career services officer", "head - career services officer",
     "campus placement", "placement process", "placement batch", "placement session",
@@ -164,7 +154,9 @@ FALSE_POSITIVE_BLACKLIST = {
     "office of", "career services, upes, dehradun", "upes, dehradun", "upes",
     "profile sheet", "profile sheet & resume", "profile", "sheet", "resume",
     "sap id", "sap", "id", "batch", "copy: received", "copy received", "copy",
-    "ip address", "ip"
+    "ip address", "ip", "ticket log", "agent notes", "customer details", "system error",
+    "term description", "table of contents", "summary of offer", "general information",
+    "risk factors", "sebi", "sec"
 }
 
 GENERIC_DOCUMENT_KEYWORDS = {
@@ -174,10 +166,12 @@ GENERIC_DOCUMENT_KEYWORDS = {
     "filing", "circular", "notice", "schedule", "table", "part", "chapter", "annexure",
     "index", "audit", "remuneration", "committee", "personnel", "shareholder", "shareholders",
     "structure", "summary", "details", "information", "notes", "access",
-    "processing", "error", "registrar", "depository",
-    "statutory", "compliance", "herring", "prospectuses",
-    "description", "identification", "placement", "services", "career", "academic",
-    "program", "signature", "opting", "process", "batch", "session", "agreement"
+    "processing", "error", "registrar", "depository", "statutory", "compliance",
+    "herring", "prospectuses", "description", "identification", "placement", "services",
+    "career", "academic", "program", "signature", "opting", "process", "batch", "session",
+    "agreement", "price", "cap", "book", "running", "lead", "managers", "building",
+    "promoter", "selling", "retail", "individual", "qualified", "institutional", "risk",
+    "risks", "general", "securities", "company", "equity"
 }
 
 CORPORATE_SUFFIXES = {
@@ -185,8 +179,8 @@ CORPORATE_SUFFIXES = {
     "solutions", "technologies", "systems", "global", "holdings", "group", "bank",
     "limited", "trust", "family trust", "llp", "co llp", "co. llp", "fund limited", "fund",
     "associates", "extrusions", "motors", "infra", "distriparks", "logistics", "wires",
-    "switchgear", "automation", "products", "management limited", "services", "ratings",
-    "securities", "industries"
+    "switchgear", "automation", "products", "management limited", "ratings", "securities",
+    "industries"
 }
 
 INDIAN_SURNAMES = {
@@ -198,7 +192,8 @@ INDIAN_SURNAMES = {
     "chavan", "gaikwad", "more", "shinde", "bhosale", "kamble", "salunkhe", "surve", "mhatre",
     "parab", "dey", "munot", "hazarika", "borah", "saikia", "gogoi", "dutta", "baruah",
     "choudhury", "sarma", "bhattacharya", "chatterjee", "banerjee", "mukherjee", "das",
-    "sen", "roy", "ghosh", "pal", "dhar", "mitra", "sengupta", "nandy", "chakraborty"
+    "sen", "roy", "ghosh", "pal", "dhar", "mitra", "sengupta", "nandy", "chakraborty",
+    "doe", "parker", "quinn", "stone", "brooks", "hayes", "reyes", "walsh", "bright", "lang"
 }
 
 INDIAN_FIRST_NAMES = {
@@ -209,7 +204,9 @@ INDIAN_FIRST_NAMES = {
     "anand", "sheetal", "ashish", "deepak", "amit", "rahul", "priya", "pooja", "neha",
     "rohan", "rashi", "rupesh", "sunita", "meera", "laxmi", "venkat", "suresh", "ramesh",
     "tejasvi", "dipankar", "diya", "aanya", "ananya", "aditya", "abhishek", "tanya", "aarav",
-    "vivaan", "vihaan", "kabir", "yash", "ishaan", "shlok", "aditi", "trupti", "sneha", "divya"
+    "vivaan", "vihaan", "kabir", "yash", "ishaan", "shlok", "aditi", "trupti", "sneha", "divya",
+    "john", "peter", "anita", "lila", "alex", "sara", "karan", "david", "mary", "oscar",
+    "noah", "owen", "nina", "raj", "iris", "leo", "jane"
 }
 
 def is_false_positive(val: str) -> bool:
@@ -217,7 +214,7 @@ def is_false_positive(val: str) -> bool:
         return True
     clean = val.strip().lower()
 
-    # Explicitly block blacklisted terms FIRST before checking corporate suffixes
+    # Explicitly block blacklisted terms FIRST
     if clean in FALSE_POSITIVE_BLACKLIST:
         return True
 
@@ -235,23 +232,12 @@ def is_false_positive(val: str) -> bool:
     words = re.findall(r'\b[a-z]+\b', clean)
     has_person_prefix = any(clean.startswith(p) for p in ["mr.", "ms.", "mrs.", "dr."])
     has_indian_name = any(w in INDIAN_SURNAMES or w in INDIAN_FIRST_NAMES for w in words)
-    has_corp_suffix = any(s in clean for s in CORPORATE_SUFFIXES)
 
-    if has_person_prefix or has_indian_name:
+    if has_person_prefix or (has_indian_name and len(words) <= 3):
         return False
 
-    if has_corp_suffix:
-        # Avoid matching institutional headers like "Career Services" or "Placement Services"
-        if any(w in ["career", "placement", "academic", "student", "parent", "office", "school", "profile", "sheet", "resume"] for w in words):
-            return True
-        return False
-
-    # Check if it starts with common false positive prefixes
-    if re.match(r'^(the|a|an|other)\s+', clean):
-        return True
-
-    has_generic = any(w in GENERIC_DOCUMENT_KEYWORDS for w in words)
-    if has_generic and len(words) <= 3:
+    # Block common document / financial terms
+    if any(w in GENERIC_DOCUMENT_KEYWORDS for w in words):
         return True
 
     return False
@@ -291,15 +277,13 @@ REGEX_PATTERNS = {
     "DOB": r'\b\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}\b|\b(?:19|20)\d{2}[-/.]\d{1,2}[-/.]\d{1,2}\b|\b\d{1,2}[-/.]\d{1,2}[-/.](?:19|20)\d{2}\b',
 }
 
-# Corporate entity pattern (catches "X Y Z Limited/LLP/Trust/Bank etc.")
+# Strict corporate entity pattern (catches "X Y Z Limited/LLP/Trust/Bank etc.")
 ORG_REGEX_PATTERN = (
-    r'\b([A-Za-z0-9&./-]+(?:\s+[A-Za-z0-9&./-]+){0,7}\s+'
+    r'\b([A-Z0-9][A-Za-z0-9&./-]+(?:\s+[A-Za-z0-9&./-]+){0,5}\s+'
     r'(?:Private Limited|Pvt\.?\s*Ltd\.?|Public Limited|Limited|Ltd\.?|'
-    r'LLP|Co\.?\s*LLP|Family Trust|Familytrust|Trust|Corporation|'
-    r'Bank|Fund Limited|Fund|Associates|Inc\.?|LLC|'
-    r'Securities|Holdings|Industries|Extrusions|Motors|'
-    r'Logistics|Distriparks|Solutions|Management|Services|'
-    r'Ratings|Automation|Products|Wires|Switchgear))\b'
+    r'LLP|Co\.?\s*LLP|Family Trust|Familytrust|Corporation|'
+    r'Fund Limited|Associates|Inc\.?|LLC|'
+    r'Extrusions|Distriparks|Switchgear))\b'
 )
 
 # Address pattern – covers Indian city/area names and pincodes
@@ -319,6 +303,18 @@ ADDRESS_REGEX_PATTERN = (
     r'\s*[–-]\s*\d{3}\s*\d{3})'
     r')'
 )
+
+
+def clean_company_name(raw: str) -> str:
+    """Strips leading non-company words like 'of the', 'approved by the', etc."""
+    clean = raw.strip()
+    strip_prefixes = [
+        r'^(?:have not been recommended or approved by the|are proposed to be listed on the|and national stock exchange of india|investments in equity and equity-related|recommended or approved by the|of the|by the|in the|and the|to the|for the|on the)\s+',
+        r'^(?:of|by|in|and|on|to|for|with|from)\s+'
+    ]
+    for p in strip_prefixes:
+        clean = re.sub(p, '', clean, flags=re.IGNORECASE).strip()
+    return clean
 
 
 def detect_pii(text: str) -> List[Dict[str, Any]]:
@@ -387,12 +383,14 @@ def detect_pii(text: str) -> List[Dict[str, Any]]:
                     continue
             add_finding(pii_type, orig, start, end, 0.97)
 
-    # ── Step 3: Indian Corporate & Trust Regex ────────────────────────────
+    # ── Step 3: Strict Corporate & Trust Regex ────────────────────────────
     for match in re.finditer(ORG_REGEX_PATTERN, text, re.IGNORECASE):
-        orig = match.group(1).strip()
-        start, end = match.start(1), match.end(1)
-        if not is_false_positive(orig):
-            add_finding("Company", orig, start, end, 0.95)
+        raw = match.group(1).strip()
+        cleaned = clean_company_name(raw)
+        if cleaned and not is_false_positive(cleaned):
+            start = match.start(1) + raw.find(cleaned)
+            end = start + len(cleaned)
+            add_finding("Company", text[start:end], start, end, 0.95)
 
     # ── Step 4: Address with Pincode Regex ────────────────────────────────
     for match in re.finditer(ADDRESS_REGEX_PATTERN, text, re.IGNORECASE):
@@ -401,24 +399,24 @@ def detect_pii(text: str) -> List[Dict[str, Any]]:
         if len(orig) >= 4 and not is_false_positive(orig):
             add_finding("Address", orig, start, end, 0.94)
 
-    # ── Step 5: Indian Name Token Sliding Window ──────────────────────────
+    # ── Step 5: Name Token Sliding Window (Strict verified first/last names)
     token_iter = list(re.finditer(r'\b[A-Za-z][a-zA-Z.-]*\b', text))
     for i in range(len(token_iter)):
-        for length in [4, 3, 2]:
+        for length in [3, 2]:
             if i + length <= len(token_iter):
                 chunk = token_iter[i:i + length]
                 words = [t.group(0).lower().rstrip('.') for t in chunk]
-                has_first = any(w in INDIAN_FIRST_NAMES for w in words[:2])
+                has_first = words[0] in INDIAN_FIRST_NAMES
                 has_last = words[-1] in INDIAN_SURNAMES
-                if (has_first and has_last) or (has_first and len(words) >= 2) or (has_last and len(words) >= 2):
+                if has_first and has_last:
                     start = chunk[0].start()
                     end = chunk[-1].end()
                     orig = text[start:end]
                     if not is_false_positive(orig):
-                        add_finding("Full Name", orig, start, end, 0.93)
+                        add_finding("Full Name", orig, start, end, 0.94)
                         break
 
-    # ── Step 5.5: Contextual & Capitalized Name Patterns ─────────────────
+    # ── Step 5.5: Contextual Name Matchers ─────────────────────────────────
     context_patterns = [
         r'(?:Name|Student[\'’]?s?\s*Name|Parent[\'’]?s?\s*Name|Reporter|Customer|User|D/o|S/o|W/o|Mr\.|Ms\.|Mrs\.|Dr\.)\s*[:,\s]\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})',
         r'\bI,\s+([A-Z][a-z]+\s+[A-Z][a-z]+)\b'
@@ -430,30 +428,11 @@ def detect_pii(text: str) -> List[Dict[str, Any]]:
             if not is_false_positive(orig):
                 add_finding("Full Name", orig, start, end, 0.95)
 
-    # Generic Capitalized Name Pair Matcher (e.g., "Tejasvi Hazarika")
-    cap_pair_pattern = r'\b([A-Z][a-z]{2,15}\s+[A-Z][a-z]{2,15})\b'
-    EXCLUDED_CAP_WORDS = {
-        "the", "office", "career", "services", "placement", "campus", "batch", "academic",
-        "year", "school", "head", "subject", "opting", "process", "service", "agreement",
-        "student", "parent", "signature", "place", "date", "verified", "headquarters",
-        "ticket", "issue", "summary", "contact", "details", "credit", "card", "social",
-        "security", "number", "email", "address", "phone", "date", "birth", "redacted",
-        "prospectus", "herring", "draft", "red", "general", "information", "risk", "factors",
-        "profile", "sheet", "resume", "sap", "id", "registration", "copy", "received"
-    }
-    for match in re.finditer(cap_pair_pattern, text):
-        orig = match.group(1).strip()
-        start, end = match.start(1), match.end(1)
-        w1, w2 = orig.split()
-        if w1.lower() not in EXCLUDED_CAP_WORDS and w2.lower() not in EXCLUDED_CAP_WORDS:
-            if not is_false_positive(orig):
-                add_finding("Full Name", orig, start, end, 0.89)
-
-    # ── Step 6: SpaCy NER ─────────────────────────────────────────────────
+    # ── Step 6: SpaCy NER (Filtered by strict false positive validator) ──
     if nlp:
         doc = nlp(text)
         for ent in doc.ents:
-            ent_map = {"PERSON": "Full Name", "ORG": "Company", "GPE": "Address", "LOC": "Address", "FAC": "Address"}
+            ent_map = {"PERSON": "Full Name", "ORG": "Company", "GPE": "Address", "LOC": "Address"}
             ftype = ent_map.get(ent.label_)
             if ftype:
                 orig = ent.text.strip()

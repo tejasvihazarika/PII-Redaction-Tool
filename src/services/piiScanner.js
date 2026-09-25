@@ -15,8 +15,7 @@ const KNOWN_PII_ORGS = new Set([
   "pandit llp", "nuvama wealth management limited", "nuvamawealth management limited",
   "icici securities limited", "mufg intime india private limited",
   "formerly link intime india private limited", "bhandary metal extrusion private limited",
-  "ksh international private limited", "and waterloo industrial park vi private limited",
-  "of ksh international limited", "waterloo motors private limited",
+  "ksh international private limited", "waterloo motors private limited",
   "ksh project management services private limited", "ksh infra park vi private limited",
   "ksh distriparks private limited", "ksh integrated logistics private limited",
   "waterloo industrial park i private limited", "waterloo industrial park ii private limited",
@@ -25,18 +24,13 @@ const KNOWN_PII_ORGS = new Set([
   "waterloo industrial park ix private limited", "waterloo industrial park ix b private limited",
   "ksh infra park iv private limited", "hdfc bank limited", "icici securities",
   "care ratings limited", "icici bank limited", "national payments corporation",
-  "united states securities", "export promotion capital", "precision wires india limited",
-  "solar energy corporation", "net working capital", "everestfamily trust",
+  "precision wires india limited", "solar energy corporation", "everestfamily trust",
   "makalufamily trust", "malabar india fund limited", "bharat bijlee limited",
   "industrial solutions limited", "switchgear limited", "georgia transformer corporation",
   "nidec industrial automation india private limited", "virginia transformer corporation",
   "cindus corporation", "elantas beck india limited", "hindalco industries limited",
   "polycom associates", "savli copper products private limited", "vedanta limited",
-  "investment private limited", "co llp", "networking capital",
-  "waterloo industrial park ix a private limited", "cloud services",
-  "company ksh international limited", "offer escrow collection bank hdfc bank",
-  "co. llp", "export-import bank", "indusind bank limited", "icici bank",
-  "bajaj finance limited"
+  "indusind bank limited", "icici bank", "bajaj finance limited"
 ]);
 
 const KNOWN_PII_PERSONS = new Set([
@@ -50,7 +44,8 @@ const KNOWN_PII_PERSONS = new Set([
   "ajay shriram patil", "ram kumar tiwari", "indu jacob", "prakash boricha",
   "eric bacha", "sachin gawade", "pravin teli", "siddharth jadhav",
   "tushar gavankar", "varun badai", "parag pansare", "hitesh ramani",
-  "sharmila joshi", "cherag gyara", "manisha shukla", "anand soni"
+  "sharmila joshi", "cherag gyara", "manisha shukla", "anand soni",
+  "rashi patil", "rohan dey", "tejasvi hazarika", "dipankar hazarika"
 ]);
 
 const KNOWN_ADDRESS_KEYWORDS = [
@@ -65,31 +60,33 @@ const KNOWN_ADDRESS_KEYWORDS = [
 // STRICT FALSE POSITIVE BLACKLIST
 // ─────────────────────────────────────────────
 const FALSE_POSITIVE_BLACKLIST = new Set([
-  "companies act", "compliance officer", "fresh issue", "equity shares", "exchange board",
-  "the offer", "disclosure requirements", "other regulatory", "statutory disclosures",
-  "institutional investors", "qualified institutional buyers", "retail individual bidders",
-  "non institutional bidders", "anchor investor", "draft red herring prospectus",
-  "red herring prospectus", "herring prospectus", "draft red", "prospectus", "issue size",
-  "face value", "net offer", "offer for sale", "promoter group", "key managerial",
-  "board of directors", "statutory auditor", "chartered accountant", "company secretary",
-  "managing director", "whole time director", "independent director",
-  "issue structure", "contact details", "alternative contact", "secondary address",
-  "primary address", "mailing address", "issue summary", "ticket log", "agent notes",
-  "customer details", "system error", "term description", "director identification",
-  "identification number", "the department", "price band", "mutual funds", "pension funds",
-  "life insurance", "allocation price", "application supported", "blocked amount",
-  "account access", "payment processing", "contact person", "contact information",
-  "redacted document", "ticket id", "date", "subject", "sebi", "sec",
-  "table of contents", "summary of offer", "general information", "risk factors",
-  "hegde promoter", "corporate identification",
-  // Institutional / Placement form terms
+  // Financial Prospectus Terms (From User Screenshots)
+  "qualified institutional", "qualified institutional buyers", "qualified institutional buyer",
+  "retail individual", "retail individual bidders", "retail individual bidder",
+  "promoter selling", "promoter selling shareholder", "cap price", "floor price",
+  "book running", "book running lead managers", "lead managers", "book building",
+  "our company", "the company", "issuer company", "general risks", "investments in equity",
+  "equity and equity-related securities", "of the securities", "securities", "the securities",
+  "have not been recommended or approved by the securities", "recommended or approved",
+  "proposed to be listed", "are proposed to be listed", "equity shares", "fresh issue",
+  "offer for sale", "issue size", "face value", "net offer", "promoter group",
+  "key managerial", "board of directors", "statutory auditor", "chartered accountant",
+  "company secretary", "managing director", "whole time director", "independent director",
+  "draft red herring prospectus", "red herring prospectus", "herring prospectus",
+  "draft red", "prospectus", "issue structure", "contact details",
+  // Institutional / Placement Form Terms
   "the office of career services", "office of career services", "career services",
   "career services officer", "head – career services officer", "head - career services officer",
   "campus placement", "placement process", "placement batch", "placement session",
   "academic year", "school head", "personality enhancement program", "service agreement",
   "student signature", "parent signature", "student's signature", "parent's signature",
   "opt-in", "opting-in", "opting-in of campus placements", "campus placements",
-  "office of", "career services, upes, dehradun", "upes, dehradun", "upes"
+  "office of", "career services, upes, dehradun", "upes, dehradun", "upes",
+  "profile sheet", "profile sheet & resume", "profile", "sheet", "resume",
+  "sap id", "sap", "id", "batch", "copy: received", "copy received", "copy",
+  "ip address", "ip", "ticket log", "agent notes", "customer details", "system error",
+  "term description", "table of contents", "summary of offer", "general information",
+  "risk factors", "sebi", "sec"
 ]);
 
 const GENERIC_KEYWORDS = new Set([
@@ -101,7 +98,10 @@ const GENERIC_KEYWORDS = new Set([
   "structure", "summary", "details", "information", "notes", "access",
   "processing", "error", "registrar", "depository", "statutory", "compliance",
   "herring", "prospectuses", "description", "identification", "placement", "services",
-  "career", "academic", "program", "signature", "opting", "process", "batch", "session"
+  "career", "academic", "program", "signature", "opting", "process", "batch", "session",
+  "agreement", "price", "cap", "book", "running", "lead", "managers", "building",
+  "promoter", "selling", "retail", "individual", "qualified", "institutional", "risk",
+  "risks", "general", "securities", "company", "equity"
 ]);
 
 const CORPORATE_SUFFIXES = [
@@ -121,7 +121,8 @@ const INDIAN_SURNAMES = new Set([
   "chavan", "gaikwad", "more", "shinde", "bhosale", "kamble", "salunkhe", "surve", "mhatre",
   "parab", "dey", "hazarika", "borah", "saikia", "gogoi", "dutta", "baruah",
   "choudhury", "sarma", "bhattacharya", "chatterjee", "banerjee", "mukherjee", "das",
-  "sen", "roy", "ghosh", "pal", "dhar", "mitra", "sengupta", "nandy", "chakraborty"
+  "sen", "roy", "ghosh", "pal", "dhar", "mitra", "sengupta", "nandy", "chakraborty",
+  "doe", "parker", "quinn", "stone", "brooks", "hayes", "reyes", "walsh", "bright", "lang"
 ]);
 
 const INDIAN_FIRST_NAMES = new Set([
@@ -132,7 +133,9 @@ const INDIAN_FIRST_NAMES = new Set([
   "anand", "sheetal", "ashish", "deepak", "amit", "rahul", "priya", "pooja", "neha",
   "rohan", "rashi", "venkat", "suresh", "ramesh", "tejasvi", "dipankar", "diya", "aanya",
   "ananya", "aditya", "abhishek", "tanya", "aarav", "vivaan", "vihaan", "kabir", "yash",
-  "ishaan", "shlok", "aditi", "trupti", "sneha", "divya"
+  "ishaan", "shlok", "aditi", "trupti", "sneha", "divya",
+  "john", "peter", "anita", "lila", "alex", "sara", "karan", "david", "mary", "oscar",
+  "noah", "owen", "nina", "raj", "iris", "leo", "jane"
 ]);
 
 const FAKE_NAMES = [
@@ -194,6 +197,18 @@ function getFakeRepl(type, seed = "") {
   return '[REDACTED]';
 }
 
+function cleanCompanyName(raw) {
+  let clean = raw.trim();
+  const stripPrefixes = [
+    /^(?:have not been recommended or approved by the|are proposed to be listed on the|and national stock exchange of india|investments in equity and equity-related|recommended or approved by the|of the|by the|in the|and the|to the|for the|on the)\s+/i,
+    /^(?:of|by|in|and|on|to|for|with|from)\s+/i
+  ];
+  for (const p of stripPrefixes) {
+    clean = clean.replace(p, '').trim();
+  }
+  return clean;
+}
+
 function isFalsePositive(val) {
   if (!val || !val.trim()) return true;
   const clean = val.trim().toLowerCase();
@@ -211,21 +226,11 @@ function isFalsePositive(val) {
   const words = (clean.match(/\b[a-z]+\b/g) || []);
   const hasPersonPrefix = /^(mr\.|ms\.|mrs\.|dr\.)/i.test(clean);
   const hasIndianName = words.some(w => INDIAN_SURNAMES.has(w) || INDIAN_FIRST_NAMES.has(w));
-  const hasCorpSuffix = CORPORATE_SUFFIXES.some(s => clean.includes(s));
 
-  if (hasPersonPrefix || hasIndianName) return false;
+  if (hasPersonPrefix || (hasIndianName && words.length <= 3)) return false;
 
-  if (hasCorpSuffix) {
-    if (words.some(w => ["career", "placement", "academic", "student", "parent", "office", "school"].includes(w))) {
-      return true;
-    }
-    return false;
-  }
-
-  if (/^(the|a|an|other)\s+/i.test(clean)) return true;
-
-  const hasGeneric = words.some(w => GENERIC_KEYWORDS.has(w));
-  if (hasGeneric && words.length <= 3) return true;
+  // Block common document / financial terms
+  if (words.some(w => GENERIC_KEYWORDS.has(w))) return true;
 
   return false;
 }
@@ -328,13 +333,17 @@ export function fallbackScanPII(text) {
     }
   }
 
-  // ── Step 3: ORG regex ────────────────────────────────────────────────────
-  const orgRe = /\b([A-Za-z0-9&./-]+(?:\s+[A-Za-z0-9&./-]+){0,7}\s+(?:Private Limited|Pvt\.?\s*Ltd\.?|Limited|Ltd\.?|LLP|Co\.?\s*LLP|Family Trust|Familytrust|Trust|Corporation|Bank|Fund Limited|Fund|Associates|Inc\.?|LLC|Securities|Holdings|Industries|Extrusions|Motors|Logistics|Distriparks|Solutions|Management|Ratings|Automation|Products|Wires|Switchgear))\b/gi;
+  // ── Step 3: Strict Corporate Regex ───────────────────────────────────────
+  const orgRe = /\b([A-Z0-9][A-Za-z0-9&./-]+(?:\s+[A-Za-z0-9&./-]+){0,5}\s+(?:Private Limited|Pvt\.?\s*Ltd\.?|Public Limited|Limited|Ltd\.?|LLP|Co\.?\s*LLP|Family Trust|Familytrust|Corporation|Fund Limited|Associates|Inc\.?|LLC|Extrusions|Distriparks|Switchgear))\b/gi;
   let m;
   while ((m = orgRe.exec(text)) !== null) {
-    const orig = m[1].trim();
-    const start = m.index, end = start + m[0].length;
-    if (!isFalsePositive(orig)) tryAdd('Company', orig, start, end, 0.94);
+    const raw = m[1].trim();
+    const cleaned = cleanCompanyName(raw);
+    if (cleaned && !isFalsePositive(cleaned)) {
+      const start = m.index + raw.indexOf(cleaned);
+      const end = start + cleaned.length;
+      tryAdd('Company', text.slice(start, end), start, end, 0.94);
+    }
   }
 
   // ── Step 4: Address regex ────────────────────────────────────────────────
@@ -346,25 +355,25 @@ export function fallbackScanPII(text) {
     if (orig.length >= 4 && !isFalsePositive(orig)) tryAdd('Address', orig, start, end, 0.93);
   }
 
-  // ── Step 5: Name sliding window ──────────────────────────────────────────
+  // ── Step 5: Name sliding window (Verified First & Last Names) ─────────────
   const tokens = [...text.matchAll(/\b[A-Za-z][a-zA-Z.-]*\b/g)];
   for (let i = 0; i < tokens.length; i++) {
-    for (const len of [4, 3, 2]) {
+    for (const len of [3, 2]) {
       if (i + len <= tokens.length) {
         const chunk = tokens.slice(i, i + len);
         const words = chunk.map(t => t[0].toLowerCase().replace(/\.$/, ''));
-        const hasFirst = INDIAN_FIRST_NAMES.has(words[0]) || (words.length > 1 && INDIAN_FIRST_NAMES.has(words[1]));
+        const hasFirst = INDIAN_FIRST_NAMES.has(words[0]);
         const hasLast = INDIAN_SURNAMES.has(words[words.length - 1]);
-        if (hasFirst || hasLast) {
+        if (hasFirst && hasLast) {
           const start = chunk[0].index, end = chunk[len - 1].index + chunk[len - 1][0].length;
           const orig = text.slice(start, end);
-          if (!isFalsePositive(orig)) { tryAdd('Full Name', orig, start, end, 0.92); break; }
+          if (!isFalsePositive(orig)) { tryAdd('Full Name', orig, start, end, 0.94); break; }
         }
       }
     }
   }
 
-  // ── Step 5.5: Contextual & Capitalized Name Matchers ─────────────────────
+  // ── Step 5.5: Contextual Name Matchers ───────────────────────────────────
   const contextRes = [
     /(?:Name|Student['’]?s?\s*Name|Parent['’]?s?\s*Name|Reporter|Customer|User|D\/o|S\/o|W\/o|Mr\.|Ms\.|Mrs\.|Dr\.)\s*[:,\s]\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})/g,
     /\bI,\s+([A-Z][a-z]+\s+[A-Z][a-z]+)\b/g
@@ -378,28 +387,6 @@ export function fallbackScanPII(text) {
       const start = cm.index + (relativeOffset !== -1 ? relativeOffset : 0);
       const end = start + cm[1].length;
       if (!isFalsePositive(orig)) tryAdd('Full Name', orig, start, end, 0.95);
-    }
-  }
-
-  // Generic 2-Word Capitalized Pair Matcher
-  const capPairRe = /\b([A-Z][a-z]{2,15}\s+[A-Z][a-z]{2,15})\b/g;
-  const EXCLUDED_CAPS = new Set([
-    "the", "office", "career", "services", "placement", "campus", "batch", "academic",
-    "year", "school", "head", "subject", "opting", "process", "service", "agreement",
-    "student", "parent", "signature", "place", "date", "verified", "headquarters",
-    "ticket", "issue", "summary", "contact", "details", "credit", "card", "social",
-    "security", "number", "email", "address", "phone", "date", "birth", "redacted",
-    "prospectus", "herring", "draft", "red", "general", "information", "risk", "factors",
-    "profile", "sheet", "resume", "sap", "id", "registration", "copy", "received"
-  ]);
-  capPairRe.lastIndex = 0;
-  let cpm;
-  while ((cpm = capPairRe.exec(text)) !== null) {
-    const orig = cpm[1].trim();
-    const start = cpm.index, end = start + cpm[0].length;
-    const [w1, w2] = orig.split(/\s+/);
-    if (!EXCLUDED_CAPS.has(w1.toLowerCase()) && !EXCLUDED_CAPS.has(w2.toLowerCase())) {
-      if (!isFalsePositive(orig)) tryAdd('Full Name', orig, start, end, 0.89);
     }
   }
 
