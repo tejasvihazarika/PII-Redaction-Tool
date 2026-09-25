@@ -156,6 +156,14 @@ FALSE_POSITIVE_BLACKLIST = {
     "redacted document", "ticket id", "date", "subject", "sebi", "sec",
     "table of contents", "summary of offer", "general information", "risk factors",
     "hegde promoter", "corporate identification",
+    # Institutional / Placement form phrases
+    "the office of career services", "office of career services", "career services",
+    "career services officer", "head – career services officer", "head - career services officer",
+    "campus placement", "placement process", "placement batch", "placement session",
+    "academic year", "school head", "personality enhancement program", "service agreement",
+    "student signature", "parent signature", "student's signature", "parent's signature",
+    "opt-in", "opting-in", "opting-in of campus placements", "campus placements",
+    "office of", "career services, upes, dehradun", "upes, dehradun", "upes"
 }
 
 GENERIC_DOCUMENT_KEYWORDS = {
@@ -167,7 +175,8 @@ GENERIC_DOCUMENT_KEYWORDS = {
     "structure", "summary", "details", "information", "notes", "access",
     "processing", "error", "registrar", "depository",
     "statutory", "compliance", "herring", "prospectuses",
-    "description", "identification",
+    "description", "identification", "placement", "services", "career", "academic",
+    "program", "signature", "opting", "process", "batch", "session", "agreement"
 }
 
 CORPORATE_SUFFIXES = {
@@ -175,7 +184,7 @@ CORPORATE_SUFFIXES = {
     "solutions", "technologies", "systems", "global", "holdings", "group", "bank",
     "limited", "trust", "family trust", "llp", "co llp", "co. llp", "fund limited", "fund",
     "associates", "extrusions", "motors", "infra", "distriparks", "logistics", "wires",
-    "switchgear", "automation", "products", "management limited", "services", "ratings",
+    "switchgear", "automation", "products", "management limited", "ratings",
     "securities", "industries"
 }
 
@@ -186,7 +195,9 @@ INDIAN_SURNAMES = {
     "bhandary", "shriram", "hirachand", "girija", "kumar", "singh", "sharma", "verma", "gupta",
     "mehta", "khan", "reddy", "rao", "nair", "menon", "pillai", "deshmukh", "kulkarni", "pawar",
     "chavan", "gaikwad", "more", "shinde", "bhosale", "kamble", "salunkhe", "surve", "mhatre",
-    "parab", "dey", "munot"
+    "parab", "dey", "munot", "hazarika", "borah", "saikia", "gogoi", "dutta", "baruah",
+    "choudhury", "sarma", "bhattacharya", "chatterjee", "banerjee", "mukherjee", "das",
+    "sen", "roy", "ghosh", "pal", "dhar", "mitra", "sengupta", "nandy", "chakraborty"
 }
 
 INDIAN_FIRST_NAMES = {
@@ -195,13 +206,23 @@ INDIAN_FIRST_NAMES = {
     "vijay", "dinesh", "ajay", "ram", "indu", "prakash", "eric", "sachin", "pravin",
     "siddharth", "tushar", "varun", "parag", "hitesh", "sharmila", "cherag", "manisha",
     "anand", "sheetal", "ashish", "deepak", "amit", "rahul", "priya", "pooja", "neha",
-    "rohan", "rashi", "rupesh", "sunita", "meera", "laxmi", "venkat", "suresh", "ramesh"
+    "rohan", "rashi", "rupesh", "sunita", "meera", "laxmi", "venkat", "suresh", "ramesh",
+    "tejasvi", "dipankar", "diya", "aanya", "ananya", "aditya", "abhishek", "tanya", "aarav",
+    "vivaan", "vihaan", "kabir", "yash", "ishaan", "shlok", "aditi", "trupti", "sneha", "divya"
 }
 
 def is_false_positive(val: str) -> bool:
     if not val or not val.strip():
         return True
     clean = val.strip().lower()
+
+    # Explicitly block blacklisted terms FIRST before checking corporate suffixes
+    if clean in FALSE_POSITIVE_BLACKLIST:
+        return True
+
+    for term in FALSE_POSITIVE_BLACKLIST:
+        if clean == term or clean.startswith(term) or clean.endswith(term):
+            return True
 
     # Never block known PII entities
     if clean in KNOWN_PII_ORGS or clean in KNOWN_PII_PERSONS:
@@ -211,28 +232,26 @@ def is_false_positive(val: str) -> bool:
     if any(kw in clean for kw in KNOWN_PII_ADDRESSES_KEYWORDS):
         return False
 
-    if clean in FALSE_POSITIVE_BLACKLIST:
-        return True
-
     words = re.findall(r'\b[a-z]+\b', clean)
-    has_corp_suffix = any(s in clean for s in CORPORATE_SUFFIXES)
     has_person_prefix = any(clean.startswith(p) for p in ["mr.", "ms.", "mrs.", "dr."])
     has_indian_name = any(w in INDIAN_SURNAMES or w in INDIAN_FIRST_NAMES for w in words)
+    has_corp_suffix = any(s in clean for s in CORPORATE_SUFFIXES)
 
-    # If it has a corporate suffix or person name, it's valid PII
-    if has_corp_suffix or has_person_prefix or has_indian_name:
+    if has_person_prefix or has_indian_name:
+        return False
+
+    if has_corp_suffix:
+        # Avoid matching institutional headers like "Career Services" or "Placement Services"
+        if any(w in ["career", "placement", "academic", "student", "parent", "office", "school"] for w in words):
+            return True
         return False
 
     # Check if it starts with common false positive prefixes
     if re.match(r'^(the|a|an|other)\s+', clean):
         return True
 
-    for term in FALSE_POSITIVE_BLACKLIST:
-        if clean == term or clean.startswith(term) or clean.endswith(term):
-            return True
-
     has_generic = any(w in GENERIC_DOCUMENT_KEYWORDS for w in words)
-    if has_generic and len(words) <= 2:
+    if has_generic and len(words) <= 3:
         return True
 
     return False
@@ -265,11 +284,11 @@ def get_fake(category: str, seed_str: str = "") -> str:
 
 REGEX_PATTERNS = {
     "Email": r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b',
-    "Phone": r'(?:\+?\s*91\s*[-.\s]?|0)[\s-]?\(?\d{2,5}\)?[\s.-]?\d{3,5}[\s.-]?\d{3,5}\b|\b022[-]\d{8}\b|\b\+91[-]\d{2,4}-\d{5,8}\b',
-    "SSN": r'\b\d{3}-\d{2}-\d{4}\b|\bSSN:?\s*\d{9}\b',
+    "Phone": r'\b[6-9]\d{9}\b|\b(?:\+?\s*91\s*[-.\s]?|0)[\s-]?\(?\d{2,5}\)?[\s.-]?\d{3,5}[\s.-]?\d{3,5}\b|\b022[-]\d{8}\b|\b\+91[-]\d{2,4}-\d{5,8}\b',
+    "SSN": r'\b\d{3}-\d{2}-\d{4}\b|\bSSN:?\s*\d{9}\b|\b(?:SAP\s*ID|Student\s*ID|Roll\s*No)[:\s]*\d{6,12}\b',
     "Credit Card": r'\b(?:\d{4}[-\s]?){3}\d{4}\b|\b3[47]\d{2}[\s-]?\d{6}[\s-]?\d{5}\b',
     "IP Address": r'\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b',
-    "DOB": r'\b(?:19|20)\d{2}[-/.]\d{1,2}[-/.]\d{1,2}\b|\b\d{1,2}[-/.]\d{1,2}[-/.](?:19|20)\d{2}\b',
+    "DOB": r'\b\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}\b|\b(?:19|20)\d{2}[-/.]\d{1,2}[-/.]\d{1,2}\b|\b\d{1,2}[-/.]\d{1,2}[-/.](?:19|20)\d{2}\b',
 }
 
 # Corporate entity pattern (catches "X Y Z Limited/LLP/Trust/Bank etc.")
@@ -279,7 +298,7 @@ ORG_REGEX_PATTERN = (
     r'LLP|Co\.?\s*LLP|Family Trust|Familytrust|Trust|Corporation|'
     r'Bank|Fund Limited|Fund|Associates|Inc\.?|LLC|'
     r'Securities|Holdings|Industries|Extrusions|Motors|'
-    r'Logistics|Distriparks|Solutions|Management|Services|'
+    r'Logistics|Distriparks|Solutions|Management|'
     r'Ratings|Automation|Products|Wires|Switchgear))\b'
 )
 
@@ -356,7 +375,7 @@ def detect_pii(text: str) -> List[Dict[str, Any]]:
             add_finding("Full Name", text[idx:end], idx, end, 0.99)
             start = end
 
-    # ── Step 2: Regex patterns (Email, Phone, SSN, etc.) ─────────────────
+    # ── Step 2: Regex patterns (Email, Phone, SSN, DOB, etc.) ────────────
     for pii_type, pattern in REGEX_PATTERNS.items():
         for match in re.finditer(pattern, text, re.IGNORECASE):
             orig = match.group(0).strip()
@@ -392,13 +411,43 @@ def detect_pii(text: str) -> List[Dict[str, Any]]:
                 words = [t.group(0).lower().rstrip('.') for t in chunk]
                 has_first = any(w in INDIAN_FIRST_NAMES for w in words[:2])
                 has_last = words[-1] in INDIAN_SURNAMES
-                if (has_first and has_last) or (has_first and len(words) >= 2):
+                if (has_first and has_last) or (has_first and len(words) >= 2) or (has_last and len(words) >= 2):
                     start = chunk[0].start()
                     end = chunk[-1].end()
                     orig = text[start:end]
                     if not is_false_positive(orig):
-                        add_finding("Full Name", orig, start, end, 0.92)
+                        add_finding("Full Name", orig, start, end, 0.93)
                         break
+
+    # ── Step 5.5: Contextual & Capitalized Name Patterns ─────────────────
+    context_patterns = [
+        r'(?:Name|Student[\'’]?s?\s*Name|Parent[\'’]?s?\s*Name|Reporter|Customer|User|D/o|S/o|W/o|Mr\.|Ms\.|Mrs\.|Dr\.)\s*[:,\s]\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})',
+        r'\bI,\s+([A-Z][a-z]+\s+[A-Z][a-z]+)\b'
+    ]
+    for cp in context_patterns:
+        for match in re.finditer(cp, text):
+            orig = match.group(1).strip()
+            start, end = match.start(1), match.end(1)
+            if not is_false_positive(orig):
+                add_finding("Full Name", orig, start, end, 0.95)
+
+    # Generic Capitalized Name Pair Matcher (e.g., "Tejasvi Hazarika")
+    cap_pair_pattern = r'\b([A-Z][a-z]{2,15}\s+[A-Z][a-z]{2,15})\b'
+    EXCLUDED_CAP_WORDS = {
+        "the", "office", "career", "services", "placement", "campus", "batch", "academic",
+        "year", "school", "head", "subject", "opting", "process", "service", "agreement",
+        "student", "parent", "signature", "place", "date", "verified", "headquarters",
+        "ticket", "issue", "summary", "contact", "details", "credit", "card", "social",
+        "security", "number", "email", "address", "phone", "date", "birth", "redacted",
+        "prospectus", "herring", "draft", "red", "general", "information", "risk", "factors"
+    }
+    for match in re.finditer(cap_pair_pattern, text):
+        orig = match.group(1).strip()
+        start, end = match.start(1), match.end(1)
+        w1, w2 = orig.split()
+        if w1.lower() not in EXCLUDED_CAP_WORDS and w2.lower() not in EXCLUDED_CAP_WORDS:
+            if not is_false_positive(orig):
+                add_finding("Full Name", orig, start, end, 0.89)
 
     # ── Step 6: SpaCy NER ─────────────────────────────────────────────────
     if nlp:

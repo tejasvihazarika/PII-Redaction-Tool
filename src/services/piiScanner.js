@@ -81,7 +81,15 @@ const FALSE_POSITIVE_BLACKLIST = new Set([
   "account access", "payment processing", "contact person", "contact information",
   "redacted document", "ticket id", "date", "subject", "sebi", "sec",
   "table of contents", "summary of offer", "general information", "risk factors",
-  "hegde promoter", "corporate identification"
+  "hegde promoter", "corporate identification",
+  // Institutional / Placement form terms
+  "the office of career services", "office of career services", "career services",
+  "career services officer", "head – career services officer", "head - career services officer",
+  "campus placement", "placement process", "placement batch", "placement session",
+  "academic year", "school head", "personality enhancement program", "service agreement",
+  "student signature", "parent signature", "student's signature", "parent's signature",
+  "opt-in", "opting-in", "opting-in of campus placements", "campus placements",
+  "office of", "career services, upes, dehradun", "upes, dehradun", "upes"
 ]);
 
 const GENERIC_KEYWORDS = new Set([
@@ -92,7 +100,8 @@ const GENERIC_KEYWORDS = new Set([
   "index", "audit", "remuneration", "committee", "personnel", "shareholder", "shareholders",
   "structure", "summary", "details", "information", "notes", "access",
   "processing", "error", "registrar", "depository", "statutory", "compliance",
-  "herring", "prospectuses", "description", "identification"
+  "herring", "prospectuses", "description", "identification", "placement", "services",
+  "career", "academic", "program", "signature", "opting", "process", "batch", "session"
 ]);
 
 const CORPORATE_SUFFIXES = [
@@ -100,7 +109,7 @@ const CORPORATE_SUFFIXES = [
   "llp", "co llp", "co. llp", "corporation", "bank", "trust", "family trust",
   "fund limited", "fund", "associates", "inc", "llc", "securities", "holdings",
   "industries", "extrusions", "motors", "logistics", "distriparks", "solutions",
-  "management", "services", "ratings", "automation", "products", "wires", "switchgear"
+  "management", "ratings", "automation", "products", "wires", "switchgear"
 ];
 
 const INDIAN_SURNAMES = new Set([
@@ -110,7 +119,9 @@ const INDIAN_SURNAMES = new Set([
   "bhandary", "shriram", "hirachand", "girija", "kumar", "singh", "sharma", "verma", "gupta",
   "mehta", "khan", "reddy", "rao", "nair", "menon", "pillai", "deshmukh", "kulkarni", "pawar",
   "chavan", "gaikwad", "more", "shinde", "bhosale", "kamble", "salunkhe", "surve", "mhatre",
-  "parab", "dey"
+  "parab", "dey", "hazarika", "borah", "saikia", "gogoi", "dutta", "baruah",
+  "choudhury", "sarma", "bhattacharya", "chatterjee", "banerjee", "mukherjee", "das",
+  "sen", "roy", "ghosh", "pal", "dhar", "mitra", "sengupta", "nandy", "chakraborty"
 ]);
 
 const INDIAN_FIRST_NAMES = new Set([
@@ -119,7 +130,9 @@ const INDIAN_FIRST_NAMES = new Set([
   "vijay", "dinesh", "ajay", "ram", "indu", "prakash", "eric", "sachin", "pravin",
   "siddharth", "tushar", "varun", "parag", "hitesh", "sharmila", "cherag", "manisha",
   "anand", "sheetal", "ashish", "deepak", "amit", "rahul", "priya", "pooja", "neha",
-  "rohan", "rashi", "venkat", "suresh", "ramesh"
+  "rohan", "rashi", "venkat", "suresh", "ramesh", "tejasvi", "dipankar", "diya", "aanya",
+  "ananya", "aditya", "abhishek", "tanya", "aarav", "vivaan", "vihaan", "kabir", "yash",
+  "ishaan", "shlok", "aditi", "trupti", "sneha", "divya"
 ]);
 
 const FAKE_NAMES = [
@@ -185,27 +198,34 @@ function isFalsePositive(val) {
   if (!val || !val.trim()) return true;
   const clean = val.trim().toLowerCase();
 
-  // Ground-truth always passes
-  if (KNOWN_PII_ORGS.has(clean) || KNOWN_PII_PERSONS.has(clean)) return false;
-  if (KNOWN_ADDRESS_KEYWORDS.some(kw => clean.includes(kw))) return false;
-
+  // Explicit check against blacklist FIRST
   if (FALSE_POSITIVE_BLACKLIST.has(clean)) return true;
-
-  const words = (clean.match(/\b[a-z]+\b/g) || []);
-  const hasCorpSuffix = CORPORATE_SUFFIXES.some(s => clean.includes(s));
-  const hasPersonPrefix = /^(mr\.|ms\.|mrs\.|dr\.)/i.test(clean);
-  const hasIndianName = words.some(w => INDIAN_SURNAMES.has(w) || INDIAN_FIRST_NAMES.has(w));
-
-  if (hasCorpSuffix || hasPersonPrefix || hasIndianName) return false;
-
-  if (/^(the|a|an|other)\s+/i.test(clean)) return true;
-
   for (const term of FALSE_POSITIVE_BLACKLIST) {
     if (clean === term || clean.startsWith(term) || clean.endsWith(term)) return true;
   }
 
+  // Ground-truth always passes
+  if (KNOWN_PII_ORGS.has(clean) || KNOWN_PII_PERSONS.has(clean)) return false;
+  if (KNOWN_ADDRESS_KEYWORDS.some(kw => clean.includes(kw))) return false;
+
+  const words = (clean.match(/\b[a-z]+\b/g) || []);
+  const hasPersonPrefix = /^(mr\.|ms\.|mrs\.|dr\.)/i.test(clean);
+  const hasIndianName = words.some(w => INDIAN_SURNAMES.has(w) || INDIAN_FIRST_NAMES.has(w));
+  const hasCorpSuffix = CORPORATE_SUFFIXES.some(s => clean.includes(s));
+
+  if (hasPersonPrefix || hasIndianName) return false;
+
+  if (hasCorpSuffix) {
+    if (words.some(w => ["career", "placement", "academic", "student", "parent", "office", "school"].includes(w))) {
+      return true;
+    }
+    return false;
+  }
+
+  if (/^(the|a|an|other)\s+/i.test(clean)) return true;
+
   const hasGeneric = words.some(w => GENERIC_KEYWORDS.has(w));
-  if (hasGeneric && words.length <= 2) return true;
+  if (hasGeneric && words.length <= 3) return true;
 
   return false;
 }
@@ -266,7 +286,6 @@ export function fallbackScanPII(text) {
   const textLower = text.toLowerCase();
 
   // ── Step 1: Ground-truth lookup ──────────────────────────────────────────
-  // Sort by length desc so longer matches win
   const sortedOrgs = [...KNOWN_PII_ORGS].sort((a, b) => b.length - a.length);
   for (const entity of sortedOrgs) {
     let idx = 0;
@@ -285,11 +304,12 @@ export function fallbackScanPII(text) {
     }
   }
 
-  // ── Step 2: Regex for email, phone, SSN, credit card, IP ─────────────────
+  // ── Step 2: Regex for email, phone, SSN, DOB, credit card, IP ─────────────
   const regexes = [
     { type: 'Email', regex: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g, conf: 0.98 },
-    { type: 'Phone', regex: /(?:\+?\s*91\s*[-.\s]?|0)[\s-]?\(?\d{2,5}\)?[\s.-]?\d{3,5}[\s.-]?\d{3,5}\b|\b022-\d{8}\b|\+91-\d{2,4}-\d{5,8}/g, conf: 0.95 },
-    { type: 'SSN', regex: /\b\d{3}-\d{2}-\d{4}\b/g, conf: 0.98 },
+    { type: 'Phone', regex: /\b[6-9]\d{9}\b|(?:\+?\s*91\s*[-.\s]?|0)[\s-]?\(?\d{2,5}\)?[\s.-]?\d{3,5}[\s.-]?\d{3,5}\b|\b022-\d{8}\b|\+91-\d{2,4}-\d{5,8}/g, conf: 0.95 },
+    { type: 'SSN', regex: /\b\d{3}-\d{2}-\d{4}\b|\b(?:SAP\s*ID|Student\s*ID|Roll\s*No)[:\s]*\d{6,12}\b/gi, conf: 0.98 },
+    { type: 'DOB', regex: /\b\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}\b/gi, conf: 0.96 },
     { type: 'Credit Card', regex: /\b(?:\d{4}[-\s]?){3}\d{4}\b/g, conf: 0.99 },
     { type: 'IP Address', regex: /\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b/g, conf: 0.95 }
   ];
@@ -309,7 +329,7 @@ export function fallbackScanPII(text) {
   }
 
   // ── Step 3: ORG regex ────────────────────────────────────────────────────
-  const orgRe = /\b([A-Za-z0-9&./-]+(?:\s+[A-Za-z0-9&./-]+){0,7}\s+(?:Private Limited|Pvt\.?\s*Ltd\.?|Limited|Ltd\.?|LLP|Co\.?\s*LLP|Family Trust|Familytrust|Trust|Corporation|Bank|Fund Limited|Fund|Associates|Inc\.?|LLC|Securities|Holdings|Industries|Extrusions|Motors|Logistics|Distriparks|Solutions|Management|Services|Ratings|Automation|Products|Wires|Switchgear))\b/gi;
+  const orgRe = /\b([A-Za-z0-9&./-]+(?:\s+[A-Za-z0-9&./-]+){0,7}\s+(?:Private Limited|Pvt\.?\s*Ltd\.?|Limited|Ltd\.?|LLP|Co\.?\s*LLP|Family Trust|Familytrust|Trust|Corporation|Bank|Fund Limited|Fund|Associates|Inc\.?|LLC|Securities|Holdings|Industries|Extrusions|Motors|Logistics|Distriparks|Solutions|Management|Ratings|Automation|Products|Wires|Switchgear))\b/gi;
   let m;
   while ((m = orgRe.exec(text)) !== null) {
     const orig = m[1].trim();
@@ -335,12 +355,49 @@ export function fallbackScanPII(text) {
         const words = chunk.map(t => t[0].toLowerCase().replace(/\.$/, ''));
         const hasFirst = INDIAN_FIRST_NAMES.has(words[0]) || (words.length > 1 && INDIAN_FIRST_NAMES.has(words[1]));
         const hasLast = INDIAN_SURNAMES.has(words[words.length - 1]);
-        if (hasFirst && hasLast) {
+        if (hasFirst || hasLast) {
           const start = chunk[0].index, end = chunk[len - 1].index + chunk[len - 1][0].length;
           const orig = text.slice(start, end);
           if (!isFalsePositive(orig)) { tryAdd('Full Name', orig, start, end, 0.92); break; }
         }
       }
+    }
+  }
+
+  // ── Step 5.5: Contextual & Capitalized Name Matchers ─────────────────────
+  const contextRes = [
+    /(?:Name|Student['’]?s?\s*Name|Parent['’]?s?\s*Name|Reporter|Customer|User|D\/o|S\/o|W\/o|Mr\.|Ms\.|Mrs\.|Dr\.)\s*[:,\s]\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})/g,
+    /\bI,\s+([A-Z][a-z]+\s+[A-Z][a-z]+)\b/g
+  ];
+  for (const re of contextRes) {
+    re.lastIndex = 0;
+    let cm;
+    while ((cm = re.exec(text)) !== null) {
+      const orig = cm[1].trim();
+      const start = cm.index + cm[0].indexOf(cm[1]);
+      const end = start + cm[1].length;
+      if (!isFalsePositive(orig)) tryAdd('Full Name', orig, start, end, 0.95);
+    }
+  }
+
+  // Generic 2-Word Capitalized Pair Matcher
+  const capPairRe = /\b([A-Z][a-z]{2,15}\s+[A-Z][a-z]{2,15})\b/g;
+  const EXCLUDED_CAPS = new Set([
+    "the", "office", "career", "services", "placement", "campus", "batch", "academic",
+    "year", "school", "head", "subject", "opting", "process", "service", "agreement",
+    "student", "parent", "signature", "place", "date", "verified", "headquarters",
+    "ticket", "issue", "summary", "contact", "details", "credit", "card", "social",
+    "security", "number", "email", "address", "phone", "date", "birth", "redacted",
+    "prospectus", "herring", "draft", "red", "general", "information", "risk", "factors"
+  ]);
+  capPairRe.lastIndex = 0;
+  let cpm;
+  while ((cpm = capPairRe.exec(text)) !== null) {
+    const orig = cpm[1].trim();
+    const start = cpm.index, end = start + cpm[0].length;
+    const [w1, w2] = orig.split(/\s+/);
+    if (!EXCLUDED_CAPS.has(w1.toLowerCase()) && !EXCLUDED_CAPS.has(w2.toLowerCase())) {
+      if (!isFalsePositive(orig)) tryAdd('Full Name', orig, start, end, 0.89);
     }
   }
 
